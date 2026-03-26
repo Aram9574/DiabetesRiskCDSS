@@ -222,20 +222,33 @@ if predict_btn:
     with col_shap:
         st.subheader("Explicabilidad — ¿Qué impulsó esta predicción?")
         
-        # SHAP local explanation
+        # 1. Get SHAP values
         shap_vals = explainer.shap_values(patient_ordered)
+        
+        # 2. Extract values for the 'Positive' class (Diabetes)
+        # TreeExplainer often returns a list [neg_class_vals, pos_class_vals]
         if isinstance(shap_vals, list):
-            sv_local = shap_vals[1][0]
+            sv_patient = shap_vals[1][0] if len(shap_vals) > 1 else shap_vals[0][0]
         else:
-            sv_local = shap_vals[0]
+            # If it's a single array, handle cases where it might be (n_samples, n_features, n_classes)
+            if len(shap_vals.shape) == 3:
+                sv_patient = shap_vals[0, :, 1]
+            else:
+                sv_patient = shap_vals[0]
         
-        # Flatten array to 1D to avoid "Per-column arrays must each be 1-dimensional" error
-        sv_local = np.array(sv_local).flatten()
+        # 3. Ensure 1D and correct length
+        sv_patient = np.array(sv_patient).flatten()
         
-        # Waterfall-style bar chart
+        # Defensive check: feature alignment
+        if len(sv_patient) != len(feature_names):
+            # Fallback for some SHAP versions that might return a single value or different shape
+            st.error(f"Error de alineación: {len(sv_patient)} valores SHAP para {len(feature_names)} características.")
+            st.stop()
+            
+        # 4. Create DataFrame
         shap_df = pd.DataFrame({
             'Característica': [FEATURE_LABELS[f] for f in feature_names],
-            'Valor SHAP': sv_local,
+            'Valor SHAP': sv_patient,
             'Valor Paciente': patient_ordered.values[0]
         }).sort_values('Valor SHAP', key=abs, ascending=True)
         
