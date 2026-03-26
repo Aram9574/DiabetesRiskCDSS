@@ -6,3 +6,5 @@ seaborn
 scikit-learn
 joblib
 shap
+fpdf2
+streamlit-lottie
