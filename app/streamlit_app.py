@@ -122,50 +122,54 @@ def create_pdf_report(patient_data, prob, risk_label, shap_desc):
     pdf = FPDF()
     pdf.add_page()
     
+    # helper to clean unicode for default fonts
+    def clean(t):
+        return str(t).encode('latin-1', 'replace').decode('latin-1')
+
     # ── Header ──
     pdf.set_font('Arial', 'B', 16)
     pdf.set_text_color(15, 23, 42)
-    pdf.cell(0, 10, 'INFORME CLINICO DE RIESGO METABOLICO (CDSS)', 0, 1, 'C')
+    pdf.cell(0, 10, clean('INFORME CLINICO DE RIESGO METABOLICO (CDSS)'), 0, 1, 'C')
     pdf.set_font('Arial', '', 10)
-    pdf.cell(0, 10, f'Fecha de generacion: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}', 0, 1, 'C')
+    pdf.cell(0, 10, clean(f'Fecha de generacion: {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'), 0, 1, 'C')
     pdf.ln(10)
     
     # ── Risk Section ──
     pdf.set_fill_color(248, 250, 252)
     pdf.rect(10, 40, 190, 30, 'F')
     pdf.set_font('Arial', 'B', 12)
-    pdf.cell(0, 10, f'RESULTADO: {risk_label}', 0, 1, 'C')
+    pdf.cell(0, 10, clean(f'RESULTADO: {risk_label}'), 0, 1, 'C')
     pdf.set_font('Arial', 'B', 24)
     pdf.cell(0, 15, f'{prob:.1%}', 0, 1, 'C')
     pdf.set_font('Arial', 'I', 9)
-    pdf.cell(0, 5, 'Probabilidad estimada de presencia de diabetes tipo 2', 0, 1, 'C')
+    pdf.cell(0, 5, clean('Probabilidad estimada de presencia de diabetes tipo 2'), 0, 1, 'C')
     pdf.ln(15)
     
     # ── Patient Data ──
     pdf.set_font('Arial', 'B', 11)
-    pdf.cell(0, 10, 'Parametros Clinicos Analizados:', 0, 1)
+    pdf.cell(0, 10, clean('Parametros Clinicos Analizados:'), 0, 1)
     pdf.set_font('Arial', '', 10)
     for k, v in patient_data.items():
         label = FEATURE_LABELS.get(k, k)
         unit = REFERENCE_RANGES.get(k, {}).get('unit', '')
-        pdf.cell(95, 8, f'- {label}:', 0, 0)
-        pdf.cell(95, 8, f'{v} {unit}', 0, 1)
+        pdf.cell(95, 8, clean(f'- {label}:'), 0, 0)
+        pdf.cell(95, 8, clean(f'{v} {unit}'), 0, 1)
     
     pdf.ln(10)
     
     # ── AI Insight ──
     pdf.set_font('Arial', 'B', 11)
-    pdf.cell(0, 10, 'Interpretacion de la Inteligencia Artificial:', 0, 1)
+    pdf.cell(0, 10, clean('Interpretacion de la Inteligencia Artificial:'), 0, 1)
     pdf.set_font('Arial', '', 10)
-    pdf.multi_cell(0, 6, shap_desc)
+    pdf.multi_cell(0, 6, clean(shap_desc))
     
     # ── Disclaimer ──
     pdf.ln(20)
     pdf.set_font('Arial', 'I', 8)
     pdf.set_text_color(100, 116, 139)
-    pdf.multi_cell(0, 5, 'AVISO: Este informe es generado por un sistema experimental de IA (CDSS) para evaluacion de riesgo metabólico en el contexto de portafolio médico. No constituye diagnostico medico final. Se recomienda confirmación por laboratorio clínico (HbA1c/Glucosa Ayunas) segun estandares internacionales (ADA 2024).')
+    pdf.multi_cell(0, 5, clean('AVISO: Este informe es generado por un sistema experimental de IA (CDSS) para evaluacion de riesgo metabolico en el contexto de portafolio medico. No constituye diagnostico medico final. Se recomienda confirmacion por laboratorio clinico (HbA1c/Glucosa Ayunas) segun estandares internacionales (ADA 2024).'))
     
-    return pdf.output(dest='S').encode('latin-1')
+    return bytes(pdf.output())
 
 # ── Globals & Artifacts ──────────────────────────────────────────────────────
 
