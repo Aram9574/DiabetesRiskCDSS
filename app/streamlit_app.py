@@ -273,7 +273,7 @@ else:
 
     with tab_res:
         st.markdown(f'<div class="risk-banner {r_class}"><h3>{r_label}</h3><h1>{prob:.1%}</h1><p>Probabilidad Estimada de Diabetes</p></div>', unsafe_allow_html=True)
-        st.ln(1)
+        st.write("") # Correct spacing
         
         c1, c2 = st.columns([1.2, 1])
         with c1:
