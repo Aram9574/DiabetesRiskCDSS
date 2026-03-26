@@ -74,8 +74,8 @@ REFERENCE_RANGES = {
     'Age':                      {'unit': 'years',  'normal': '—',                  'min': 21,  'max': 90,   'step': 1},
     'DiabetesPedigreeFunction': {'unit': 'score',  'normal': '<0.5 (low risk)',    'min': 0.0, 'max': 2.5,  'step': 0.01},
     'Pregnancies':              {'unit': 'n',      'normal': '—',                  'min': 0,   'max': 17,   'step': 1},
-    'BloodPressure':            {'unit': 'mmHg',   'normal': '60–80 (diastolic)', 'min': 40,  'max': 122,  'step': 1},
-    'SkinThickness':            {'unit': 'mm',     'normal': '10–50',              'min': 5,   'max': 99,   'step': 1},
+    'BloodPressure':            {'unit': 'mmHg',   'normal': '60–80 (diastolic)', 'min': 0,  'max': 122,  'step': 1},
+    'SkinThickness':            {'unit': 'mm',     'normal': '10–50',              'min': 0,   'max': 99,   'step': 1},
     'Insulin':                  {'unit': 'μU/mL',  'normal': '16–166 (2h post)',  'min': 0,   'max': 846,  'step': 1},
 }
 
