@@ -229,6 +229,9 @@ if predict_btn:
         else:
             sv_local = shap_vals[0]
         
+        # Flatten array to 1D to avoid "Per-column arrays must each be 1-dimensional" error
+        sv_local = np.array(sv_local).flatten()
+        
         # Waterfall-style bar chart
         shap_df = pd.DataFrame({
             'Característica': [FEATURE_LABELS[f] for f in feature_names],
