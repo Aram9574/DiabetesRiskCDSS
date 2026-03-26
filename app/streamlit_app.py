@@ -42,14 +42,21 @@ st.markdown("""
 
 @st.cache_resource
 def load_artifacts():
-    base = os.path.dirname(os.path.abspath(__file__))
-    src  = os.path.join(base, '..', 'src')
-    model     = joblib.load(os.path.join(src, 'model_rf.pkl'))
-    explainer = joblib.load(os.path.join(src, 'shap_explainer.pkl'))
-    scaler    = joblib.load(os.path.join(src, 'scaler.pkl'))
-    imp_stats = joblib.load(os.path.join(src, 'imputation_stats.pkl'))
-    cap_vals  = joblib.load(os.path.join(src, 'cap_values.pkl'))
-    feat_names= joblib.load(os.path.join(src, 'feature_names.pkl'))
+    # BASE_DIR should point to the repository root
+    # Since this file is in app/streamlit_app.py, the root is one level up
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    SRC_DIR = os.path.join(BASE_DIR, 'src')
+    
+    def get_path(filename):
+        return os.path.join(SRC_DIR, filename)
+
+    model     = joblib.load(get_path('model_rf.pkl'))
+    explainer = joblib.load(get_path('shap_explainer.pkl'))
+    scaler    = joblib.load(get_path('scaler.pkl'))
+    imp_stats = joblib.load(get_path('imputation_stats.pkl'))
+    cap_vals  = joblib.load(get_path('cap_values.pkl'))
+    feat_names= joblib.load(get_path('feature_names.pkl'))
+    
     return model, explainer, scaler, imp_stats, cap_vals, feat_names
 
 try:
