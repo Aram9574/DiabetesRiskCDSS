@@ -184,11 +184,19 @@ with st.sidebar:
     in_vals = {}
     st.markdown("---")
     for f in ['Glucose', 'BMI', 'Age', 'DiabetesPedigreeFunction']:
-        in_vals[f] = st.number_input(FEATURE_LABELS[f], float(REFERENCE_RANGES[f]['min']), float(REFERENCE_RANGES[f]['max']), float(current_in.get(f, 100.0)), step=0.1 if f in ['BMI','DiabetesPedigreeFunction'] else 1.0)
+        v_min = float(REFERENCE_RANGES[f]['min'])
+        v_max = float(REFERENCE_RANGES[f]['max'])
+        raw_val = float(current_in.get(f, 100.0 if f == 'Glucose' else 25.0 if f == 'BMI' else 50.0))
+        clamped_val = min(max(raw_val, v_min), v_max)
+        in_vals[f] = st.number_input(FEATURE_LABELS[f], v_min, v_max, clamped_val, step=0.1 if f in ['BMI','DiabetesPedigreeFunction'] else 1.0)
     
     with st.expander("Laboratorio Secundario"):
         for f in ['Pregnancies', 'BloodPressure', 'SkinThickness', 'Insulin']:
-            in_vals[f] = st.number_input(FEATURE_LABELS[f], float(REFERENCE_RANGES[f]['min']), float(REFERENCE_RANGES[f]['max']), float(current_in.get(f, 0.0)))
+            v_min = float(REFERENCE_RANGES[f]['min'])
+            v_max = float(REFERENCE_RANGES[f]['max'])
+            raw_val = float(current_in.get(f, 0.0))
+            clamped_val = min(max(raw_val, v_min), v_max)
+            in_vals[f] = st.number_input(FEATURE_LABELS[f], v_min, v_max, clamped_val)
 
     predict_btn = st.button("🔬 Realizar Analisis", use_container_width=True, type="primary")
 
