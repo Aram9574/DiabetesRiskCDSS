@@ -227,8 +227,40 @@ with st.sidebar:
 
 # ── Main Logic & Navigation ──────────────────────────────────────────────────
 
-if not predict_btn:
-    tab1, tab2 = st.tabs(["👋 Bienvenido", "📈 Inteligencia Poblacional"])
+# Initialize session state for prediction results
+if 'prediction' not in st.session_state:
+    st.session_state.prediction = None
+
+if predict_btn:
+    # ── Inference Logic ──
+    df_raw = pd.DataFrame([input_values])
+    # Impute missing (0 case)
+    for col in ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']:
+        if df_raw[col].values[0] == 0: df_raw[col] = imp_stats[col]['overall_median']
+    # Clip
+    for col, caps in cap_vals.items(): 
+        if col in df_raw.columns: df_raw[col] = df_raw[col].clip(caps['lower'], caps['upper'])
+    
+    patient_prepared = df_raw[feature_names]
+    prob = model.predict_proba(patient_prepared)[0][1]
+    
+    # UI Categories
+    if prob >= 0.7: r_class, r_label = "risk-high", "RIESGO ALTO"
+    elif prob >= 0.4: r_class, r_label = "risk-medium", "RIESGO MODERADO"
+    else: r_class, r_label = "risk-low", "RIESGO BAJO"
+
+    # Store in session state
+    st.session_state.prediction = {
+        'prob': prob,
+        'r_class': r_class,
+        'r_label': r_label,
+        'patient_prepared': patient_prepared,
+        'input_values': input_values
+    }
+
+# Display logic
+if st.session_state.prediction is None:
+    tab1, tab2, tab_guide_init = st.tabs(["👋 Bienvenido", "📈 Inteligencia Poblacional", "📗 Guías Clínicas"])
     
     with tab1:
         col_text, col_anim = st.columns([2, 1])
@@ -251,33 +283,47 @@ if not predict_btn:
     with tab2:
         st.subheader("Importancia Global de Variables")
         st.markdown("¿Cuáles son los factores que más mueven la balanza a nivel poblacional?")
-        # Static representation of global importance if available
         st.image("https://raw.githubusercontent.com/Aram9574/DiabetesRiskCDSS/main/notebooks/global_shap.png", caption="Importancia Global (Datos de entrenamiento)")
 
+    with tab_guide_init:
+        st.markdown("""
+        ### Estándares de Cuidado ADA 2024
+        
+        #### 1. Criterios de Cribado
+        - **Adultos asintomáticos:** Todos a partir de los 35 años, o antes si tienen IMC ≥ 25 (o ≥ 23 en asiáticos) y factores de riesgo adicionales (e.g., inactividad, familiares de primer grado con DM2).
+        - **Antecedentes:** Mujeres con diagnóstico previo de Diabetes Gestacional deben evaluarse cada 3 años.
+        
+        #### 2. Clasificación Glucémica
+        | Categoría | Glucosa Ayuno (mg/dL) | HbA1c (%) |
+        | :--- | :---: | :---: |
+        | **Normal** | < 100 | < 5.7 |
+        | **Prediabetes** | 100 - 125 | 5.7 - 6.4 |
+        | **Diabetes** | ≥ 126 | ≥ 6.5 |
+        
+        #### 3. Metas de Control
+        - **HbA1c:** < 7.0% para la mayoría de adultos no gestantes.
+        - **Presión Arterial:** < 130/80 mmHg para reducir complicaciones micro/macrovasculares.
+        - **Lípidos:** Uso estatina según perfil de riesgo CV.
+        
+        ---
+        *Nota: Esta herramienta de CDSS es complementaria al juicio clínico del profesional sanitario.*
+        """)
+
 else:
-    # ── Inference Logic ──
-    df_raw = pd.DataFrame([input_values])
-    # Impute missing (0 case)
-    for col in ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']:
-        if df_raw[col].values[0] == 0: df_raw[col] = imp_stats[col]['overall_median']
-    # Clip
-    for col, caps in cap_vals.items(): 
-        if col in df_raw.columns: df_raw[col] = df_raw[col].clip(caps['lower'], caps['upper'])
-    
-    patient_prepared = df_raw[feature_names]
-    prob = model.predict_proba(patient_prepared)[0][1]
-    
-    # UI Categories
-    if prob >= 0.7: r_class, r_label = "risk-high", "RIESGO ALTO"
-    elif prob >= 0.4: r_class, r_label = "risk-medium", "RIESGO MODERADO"
-    else: r_class, r_label = "risk-low", "RIESGO BAJO"
+    # Extract from session state
+    p = st.session_state.prediction
+    prob = p['prob']
+    r_class = p['r_class']
+    r_label = p['r_label']
+    patient_prepared = p['patient_prepared']
+    input_values = p['input_values']
 
     # ── Main Dashboard ──
     tab_res, tab_whatif, tab_guide = st.tabs(["📊 Diagnóstico de Riesgo", "⚖️ Análisis What-If", "📗 Guías Clínicas"])
 
     with tab_res:
         st.markdown(f'<div class="risk-banner {r_class}"><h3>{r_label}</h3><h1>{prob:.1%}</h1><p>Probabilidad Estimada de Diabetes</p></div>', unsafe_allow_html=True)
-        st.write("") # Correct spacing
+        st.write("")
         
         c1, c2 = st.columns([1.2, 1])
         with c1:
@@ -294,16 +340,14 @@ else:
             ax.axvline(0, color='black', alpha=0.3)
             st.pyplot(fig)
             
-            # Logic for interpretation string
             top_feature = [FEATURE_LABELS[f] for f in feature_names][np.argmax(np.abs(sv))]
-            clinical_insight = f"El factor determinante en este paciente es {top_feature}. " + ("Este valor está empujando el riesgo significativamente al alza." if sv[np.argmax(np.abs(sv))] > 0 else "Este valor actúa como factor protector en el perfil actual.")
+            clinical_insight = f"El factor determinante en este paciente es {top_feature}. " + ("Este valor está empujando el riesgo significativamente al alza." if sv[np.argmax(np.abs(sv))] > 0 else "Este factor actúa como protector en el perfil actual.")
             st.info(f"💡 **Insight IA:** {clinical_insight}")
 
         with c2:
             st.markdown("#### Informe del Paciente")
             st.dataframe(patient_prepared.T.rename(columns={0: 'Valor'}), use_container_width=True)
             
-            # PDF Generation
             pdf_data = create_pdf_report(input_values, prob, r_label, clinical_insight)
             st.download_button(
                 label="📥 Descargar Informe Clínico (PDF)",
@@ -319,10 +363,9 @@ else:
         
         col_sim1, col_sim2 = st.columns(2)
         with col_sim1:
-            bmi_sim = st.slider("Nuevo IMC deseado", 15.0, 50.0, float(input_values['BMI']))
-            glucose_sim = st.slider("Nueva Glucosa deseada", 60.0, 300.0, float(input_values['Glucose']))
+            bmi_sim = st.slider("Nuevo IMC deseado", 15.0, 50.0, float(input_values['BMI']), key="sim_bmi")
+            glucose_sim = st.slider("Nueva Glucosa deseada", 60.0, 300.0, float(input_values['Glucose']), key="sim_glu")
         
-        # New inference for simulation
         sim_df = patient_prepared.copy()
         sim_df['BMI'] = bmi_sim
         sim_df['Glucose'] = glucose_sim
@@ -330,15 +373,25 @@ else:
         
         with col_sim2:
             st.metric("Nueva Probabilidad", f"{prob_sim:.1%}", delta=f"{(prob_sim - prob):.1%}", delta_color="inverse")
-            if prob_sim < prob: st.success("✅ La intervención simulada reduce significativamente el riesgo.")
+            if prob_sim < prob: st.success("✅ La intervención simulada reduce el riesgo.")
             else: st.warning("⚠️ Los ajustes actuales no reducen el riesgo.")
 
     with tab_guide:
         st.markdown("""
         ### Estándares de Cuidado ADA 2024
-        - **Criterio Diagnóstico:** Glucosa en ayuno ≥ 126 mg/dL o HbA1c ≥ 6.5%.
-        - **Prediabetes:** Glucosa 100-125 mg/dL.
-        - **Acción recomendada:** Si el riesgo es > 40%, se sugiere cribado analítico formal inmediato y evaluación de sindrome metabólico.
+        
+        #### 📊 Criterios Diagnósticos
+        *   **Diabetes:** Glucosa en ayunas ≥ 126 mg/dL (7.0 mmol/L) o HbA1c ≥ 6.5%.
+        *   **Prediabetes:** Glucosa en ayunas 100–125 mg/dL (5.6–6.9 mmol/L) o HbA1c 5.7–6.4%.
+        *   **Glucosa posprandial (2h):** ≥ 200 mg/dL durante una prueba de tolerancia oral a la glucosa indica diabetes.
+
+        #### 🌡️ Recomendaciones Según Riesgo IA
+        1.  **Riesgo Bajo (<40%):** Enfoque en prevención primaria, dieta mediterránea/plant-based y 150 min/semana de actividad física.
+        2.  **Riesgo Moderado (40-70%):** Considerar cribado formal con HbA1c inmediatamente. Monitorizar perímetro abdominal y perfil lipídico.
+        3.  **Riesgo Alto (>70%):** Alta probabilidad de disglicemia actual. Se requiere evaluación médica presencial urgente y posible inicio de intervención farmacológica según guías.
+
+        ---
+        *Disclaimer: Esta herramienta automatizada utiliza patrones estadísticos y no reemplaza la validación por un facultativo.*
         """)
         st.image("https://www.diabetes.org/sites/default/files/styles/default/public/2023-12/ADA-Logo.png", width=150)
 
