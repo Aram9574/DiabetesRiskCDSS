@@ -4,130 +4,118 @@
 [![Streamlit](https://img.shields.io/badge/Demo-Streamlit-red)](https://streamlit.io)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-> **Clinical decision support tool for type 2 diabetes risk stratification in primary care settings.**
-> Built as a portfolio project demonstrating end-to-end clinical ML: from raw data to deployed application.
+> **Herramienta de soporte a la decisión clínica para la estratificación del riesgo de diabetes tipo 2 en entornos de atención primaria.**
+> Desarrollado como un proyecto de portfolio que demuestra un flujo completo de ML clínico: desde los datos brutos hasta la aplicación desplegada.
 
 ---
 
-## Clinical Context
+## Contexto Clínico
 
-Type 2 diabetes affects over 537 million adults worldwide (IDF, 2021), with a large proportion undiagnosed at the time of presentation. Early risk stratification in primary care can enable targeted interventions — lifestyle modification, metabolic monitoring, and timely referral — before overt hyperglycemia develops.
+La diabetes tipo 2 afecta a más de 537 millones de adultos en todo el mundo (IDF, 2021), con una gran proporción de casos no diagnosticados en el momento de la consulta. La estratificación temprana del riesgo en atención primaria permite intervenciones dirigidas (modificación del estilo de vida, monitorización metabólica y derivación oportuna) antes de que se desarrolle una hiperglucemia manifiesta.
 
-This project builds a machine learning pipeline to support that decision: given a patient's basic clinical and anthropometric data, estimate their probability of diabetes and surface the variables driving that risk.
+Este proyecto construye un pipeline de machine learning para apoyar esa decisión: a partir de los datos clínicos y antropométricos básicos de un paciente, se estima su probabilidad de diabetes y se visualizan las variables que impulsan dicho riesgo.
 
-**This tool does not diagnose diabetes.** It is designed as a decision support layer for clinicians, consistent with the CDSS (Clinical Decision Support System) paradigm — augmenting clinical judgment, not replacing it.
+**Esta herramienta no diagnostica la diabetes.** Está diseñada como una capa de soporte para el clínico, bajo el paradigma de CDSS (*Clinical Decision Support System*): aumentar el juicio clínico, no reemplazarlo.
 
 ---
 
-## What This Project Demonstrates
+## Qué demuestra este proyecto
 
-| Layer | What it shows |
+| Capa | Qué demuestra |
 |---|---|
-| Clinical framing | Ability to translate a clinical problem into an ML task with appropriate outcome definitions and metric selection |
-| ML pipeline | End-to-end workflow: EDA, preprocessing, model comparison, hyperparameter tuning, evaluation |
-| Explainability | SHAP-based local and global explanations with clinical interpretation |
-| Deployment | Streamlit app with clinically-informed UX: reference ranges, risk categories, per-patient explanation |
-| Communication | Readable documentation oriented to both clinical and technical audiences |
+| Enfoque Clínico | Capacidad para traducir un problema clínico en una tarea de ML con definiciones de *outcomes* y selección de métricas adecuadas |
+| Pipeline de ML | Flujo completo: EDA, preprocesamiento, comparación de modelos, ajuste de hiperparámetros y evaluación |
+| Explicabilidad | Explicaciones locales y globales basadas en SHAP con interpretación clínica |
+| Despliegue | App en Streamlit con UX informada clínicamente: rangos de referencia, categorías de riesgo y explicación por paciente |
+| Comunicación | Documentación legible orientada tanto a audiencias clínicas como técnicas |
 
 ---
 
 ## Dataset
 
-**Source:** [Pima Indians Diabetes Dataset](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database) — originally from the National Institute of Diabetes and Digestive and Kidney Diseases.
+**Fuente:** [Pima Indians Diabetes Dataset](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database) — originalmente del National Institute of Diabetes and Digestive and Kidney Diseases.
 
-**Population:** Adult women of Pima Indian heritage, age ≥ 21 years.
+**Población:** Mujeres adultas de herencia india Pima, edad ≥ 21 años.
 
-**Target variable:** Binary — diabetes diagnosis confirmed by WHO criteria (plasma glucose ≥ 200 mg/dL or FPG ≥ 126 mg/dL on two occasions).
+**Variable objetivo:** Binaria — diagnóstico de diabetes confirmado por criterios de la OMS (glucosa en plasma ≥ 200 mg/dL o FPG ≥ 126 mg/dL en dos ocasiones).
 
-**Features used:**
+**Características utilizadas:**
 
-| Feature | Clinical meaning |
+| Característica | Significado clínico |
 |---|---|
-| Pregnancies | Number of gestational events (proxy for gestational diabetes history) |
-| Glucose | Plasma glucose at 2h in oral glucose tolerance test (mg/dL) |
-| BloodPressure | Diastolic blood pressure (mmHg) |
-| SkinThickness | Triceps skin fold thickness (mm) — proxy for subcutaneous fat |
-| Insulin | 2-hour serum insulin (μU/mL) |
-| BMI | Body Mass Index (kg/m²) |
-| DiabetesPedigreeFunction | Family history of diabetes — genetic risk score |
-| Age | Age in years |
+| Pregnancies | Número de gestaciones (proxy de antecedentes de diabetes gestacional) |
+| Glucose | Glucosa en plasma a las 2h en test de tolerancia oral (mg/dL) |
+| BloodPressure | Presión arterial diastólica (mmHg) |
+| SkinThickness | Grosor del pliegue cutáneo del tríceps (mm) — proxy de grasa subcutánea |
+| Insulin | Insulina sérica a las 2 horas (μU/mL) |
+| BMI | Índice de Masa Corporal (kg/m²) |
+| DiabetesPedigreeFunction | Antecedentes familiares de diabetes — puntuación de riesgo genético |
+| Age | Edad en años |
 
-### Known Limitations (Clinically Important)
+### Limitaciones Conocidas (Relevancia Clínica)
 
-- **Single-sex, single-ethnicity sample.** Generalizability to other populations is uncertain. Do not apply thresholds derived here to general practice without validation.
-- **Zero-value artifacts.** Biologically implausible zeros in Glucose, BMI, BloodPressure, etc. represent missing data, not true zeros. Handled explicitly in preprocessing (see notebook 02).
-- **Cross-sectional snapshot.** No longitudinal follow-up; incident diabetes vs. prevalent diabetes distinction is not possible.
-- **No medication or lifestyle data.** Confounders like antihyperglycemic treatment, physical activity, or dietary patterns are absent.
+- **Muestra de sexo y etnia única.** La generalización a otras poblaciones es incierta. No se deben aplicar los umbrales derivados aquí en la práctica general sin validación previa.
+- **Artefactos de valor cero.** Los ceros biológicamente implausibles en Glucosa, IMC, Presión Arterial, etc., representan datos faltantes, no ceros reales. Se manejaron explícitamente en el preprocesamiento (ver notebook 02).
+- **Instantánea transversal.** No hay seguimiento longitudinal; no es posible distinguir entre diabetes incidente y prevalente.
+- **Sin datos de medicación o estilo de vida.** Ausencia de variables confusoras como tratamiento antihiperglucemiante, actividad física o patrones dietéticos.
 
 ---
 
-## Model Performance
+## Rendimiento del Modelo
 
-| Model | AUC-ROC | Sensitivity | Specificity | Accuracy |
+| Modelo | AUC-ROC | Sensibilidad | Especificidad | Exactitud (Accuracy) |
 |---|---|---|---|---|
-| Logistic Regression | — | — | — | — |
+| Regresión Logística | — | — | — | — |
 | SVM (RBF) | — | — | — | — |
 | **Random Forest** | **0.942** | — | — | **85.7%** |
 
-> Full evaluation in `notebooks/03_evaluation.ipynb`, including calibration curves, confusion matrices, and threshold analysis.
+> Evaluación completa en `notebooks/03_evaluation.ipynb`, incluyendo curvas de calibración, matrices de confusión y análisis de umbrales.
 
-**Why AUC-ROC as primary metric?**
-In a screening context, we want a model that correctly identifies patients at risk (high sensitivity), even at some cost to specificity. AUC-ROC captures discrimination ability across all thresholds, making it the appropriate primary metric here. Accuracy alone would be misleading given class imbalance (~35% positive rate).
+**¿Por qué AUC-ROC como métrica principal?**
+En un contexto de cribado (screening), buscamos un modelo que identifique correctamente a los pacientes en riesgo (alta sensibilidad), incluso a costa de la especificidad. El AUC-ROC captura la capacidad de discriminación en todos los unbrales, lo que la convierte en la métrica principal adecuada. La exactitud por sí sola sería engañosa dada la prevalencia de la clase (~35%).
 
 ---
 
-## Project Structure
+## Estructura del Proyecto
 
-```
 diabetes-risk-cdss/
 ├── data/
-│   └── diabetes.csv              # Raw dataset
+│   └── diabetes.csv              # Dataset original
 ├── notebooks/
-│   ├── 01_eda.ipynb              # Exploratory Data Analysis
-│   ├── 02_preprocessing.ipynb    # Feature engineering & imputation
-│   └── 03_evaluation.ipynb       # Model comparison, SHAP, calibration
+│   ├── 01_eda.ipynb              # Análisis Exploratorio de Datos (EDA)
+│   ├── 02_preprocessing.ipynb    # Ingeniería de variables e imputación
+│   └── 03_evaluation.ipynb       # Comparación de modelos, SHAP, calibración
 ├── src/
-│   ├── preprocessing.py          # Reusable preprocessing functions
-│   ├── model.py                  # Model training & serialization
-│   └── metrics.py                # Clinical metrics utilities
+│   ├── preprocessing.py          # Funciones de preprocesamiento reutilizables
+│   ├── model.py                  # Entrenamiento y serialización del modelo
+│   └── metrics.py                # Utilidades para métricas clínicas
 ├── app/
-│   └── streamlit_app.py          # Interactive risk calculator
+│   └── streamlit_app.py          # Calculadora de riesgo interactiva
 ├── requirements.txt
 └── README.md
-```
+
 
 ---
 
-## Run Locally
+## Ejecución Local
 
 ```bash
-git clone https://github.com/Aram9574/diabetes-risk-cdss.git
+git clone [https://github.com/Aram9574/diabetes-risk-cdss.git](https://github.com/Aram9574/diabetes-risk-cdss.git)
 cd diabetes-risk-cdss
 pip install -r requirements.txt
 
-# Run notebooks
+# Ejecutar notebooks
 jupyter lab
 
-# Run Streamlit app
+# Ejecutar aplicación Streamlit
 streamlit run app/streamlit_app.py
-```
+Demo en Vivo
+Lanzar App ← enlace actualizado tras el despliegue
 
----
+Descargo de Responsabilidad Clínica
+Esta herramienta está destinada a fines educativos y de investigación. No está validada para uso clínico y no constituye asesoramiento médico. Cualquier aplicación en entornos clínicos reales requeriría una validación prospectiva, revisión regulatoria y supervisión institucional.
 
-## Live Demo
+Autor
+Alejandro Zakzuk — Médico · IA Aplicada a la Salud (CEMP) · Salud Digital (Universidad Europea de Madrid)
 
-[Launch App](https://your-streamlit-url.streamlit.app) ← *link updated after deployment*
-
----
-
-## Clinical Disclaimer
-
-This tool is intended for educational and research purposes. It is not validated for clinical use and does not constitute medical advice. Any application in real clinical settings would require prospective validation, regulatory review, and institutional oversight.
-
----
-
-## Author
-
-**Alejandro Zakzuk** — Physician · AI Applied to Health (CEMP) · Digital Health (Universidad Europea de Madrid)
-
-[LinkedIn](https://linkedin.com/in/alejandrozakzuk-ia-salud-digital) · [Website](https://alejandrozakzuk.com) · [GitHub](https://github.com/Aram9574)
+LinkedIn · Website · GitHub
